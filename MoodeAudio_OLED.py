@@ -18,6 +18,7 @@ Reference    :
  https://github.com/haven-jeon/piAu_volumio
  http://blog.naver.com/kjnam100/220805352857
  https://pypi.python.org/pypi/Pillow/2.1.0
+ https://github.com/adafruit/Adafruit_CircuitPython_SSD1306
 
 Font         :
  SourceHanSansK-Normal.otf  https://github.com/adobe-fonts/source-han-sans
@@ -29,21 +30,30 @@ Font         :
 
 import time
 import os
+import board
 from sys import exit
 from subprocess import *
 from time import *
 from datetime import datetime
-#import Adafruit_GPIO.SPI as SPI
-import Adafruit_SSD1306
-
-from PIL import Image
-from PIL import ImageDraw
-from PIL import ImageFont
-
+from PIL import Image, ImageDraw, ImageFont
 from mpd import MPDClient, MPDError, CommandError
-import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
+
+# Import all board pins.
+from board import SCL, SDA
+import busio
+
+# Import the SSD1306 module.
+import adafruit_ssd1306
+
+# Create the I2C interface.
+i2c = board.I2C()
+
+# Create the SSD1306 OLED class.
+# The first two parameters are the pixel width and pixel height.  Change these
+# to the right size for your display!
+oled = adafruit_ssd1306.SSD1306_I2C(128, 64, i2c)
+# Alternatively you can change the I2C address of the device with an addr parameter:
+#display = adafruit_ssd1306.SSD1306_I2C(128, 32, i2c, addr=0x31)
 
 # Raspberry Pi pin configuration:
 RST = 24
@@ -51,9 +61,6 @@ RST = 24
 DC = 23
 SPI_PORT = 0
 SPI_DEVICE = 0
-
-# 128x64 display with hardware I2C:
-disp = Adafruit_SSD1306.SSD1306_128_64(rst=RST)
 
 class PollerError(Exception):
     """Fatal error in poller."""
@@ -153,7 +160,6 @@ class MPDPoller(object):
 
             vol = stats['volume']
 
-
         # Couldn't get the current song, so try reconnecting and retrying
         except (MPDError, IOError):
             # No error handling required here
@@ -197,17 +203,14 @@ def get_ip_address(cmd, cmdeth):
 
 def main():
 
-    # Initialize library.
-    disp.begin()
-
     # Clear display.
-    disp.clear()
-    disp.display()
+    oled.fill(0)
+    oled.show()
 
     # Create blank image for drawing.
     # Make sure to create image with mode '1' for 1-bit color.
-    width = disp.width
-    height = disp.height
+    width = oled.width
+    height = oled.height
     image = Image.new('1', (width, height))
 
     # Get drawing object to draw on image.
@@ -244,22 +247,22 @@ def main():
         ipaddr = get_ip_address(cmd, cmdeth)
 
         if status is None:
-            msg1 = "라즈미니파이"
+            msg1 = "라즈뮤직파이"
             msg2 = "라즈겜동 텐타클 팀"
             msg3 = datetime.now().strftime( "%b %d %H:%M:%S" )
-            msg4 = unicode( "IP " + ipaddr )
+            msg4 = "IP " + ipaddr
             t1_size = draw.textsize(msg1, font=font_msg1)
             t2_size = draw.textsize(msg2, font=font_msg2)
             t3_size = draw.textsize(msg3, font=font_info)
             t4_size = draw.textsize(msg4, font=font_info)
 
             draw.rectangle((0,0,width,height), outline=0, fill=0)
-            draw.text(((width-t1_size[0])/2, top), unicode(msg1), font=font_msg1, fill=255)
-            draw.text(((width-110)/2, top+18), unicode(msg2), font=font_msg2, fill=255)
+            draw.text(((width-t1_size[0])/2, top), msg1, font=font_msg1, fill=255)
+            draw.text(((width-110)/2, top+18), msg2, font=font_msg2, fill=255)
             draw.text(((width-t3_size[0])/2, top+34), msg3, font=font_info, fill=255)
             draw.text(((width-t4_size[0])/2, top+48), msg4, font=font_info, fill=255)
-            disp.image(image)
-            disp.display()
+            oled.image(image)
+            oled.show()
             continue
 
         artist = status['artist']
@@ -276,7 +279,7 @@ def main():
             vol_str = vol_str + '-'
 
         #print (titleLength, txtFind.isalpha())
-        title = unicode(title)
+        title = title
 
         titleLength = len(title)
         if titleLength > 0:
@@ -293,38 +296,37 @@ def main():
                 titleIndex2 = 40
 
             if titleLength > titleLine3:
-                draw.text((0, top), unicode(artist), font=font_art, fill=255)
+                draw.text((0, top), artist, font=font_art, fill=255)
                 draw.text((0, top+15), title[0:titleIndex1], font=font_tit, fill=255)
                 draw.text((0, top+30), title[titleIndex1:titleIndex2], font=font_tit, fill=255)
                 draw.text((0, top+45), title[titleIndex2:60], font=font_tit, fill=255)
 
             elif titleLength > titleLine2:
-                draw.text((0, top), unicode(artist), font=font_art, fill=255)
+                draw.text((0, top), artist, font=font_art, fill=255)
                 draw.text((0, top+15), title[0:titleIndex1], font=font_tit, fill=255)
                 draw.text((0, top+30), title[titleIndex1:titleIndex2], font=font_tit, fill=255)
                 draw.text((0, top+45), eltime, font=font_info, fill=255)
                 draw.text((88, top+45), "Vol " + str(vol), font=font_info, fill=255)
 
             else:
-                draw.text((0, top), unicode(artist), font=font_art, fill=255)
-                draw.text((0, top+15), unicode(title), font=font_tit, fill=255)
+                draw.text((0, top), artist, font=font_art, fill=255)
+                draw.text((0, top+15), title, font=font_tit, fill=255)
                 draw.text((0, top+30), eltime, font=font_info, fill=255)
                 draw.text((88, top+30), "Vol " + str(vol), font=font_info, fill=255)
                 draw.text((0, top+45), song_info, font=font_info, fill=255)
                
         else:
-            artist = unicode("no information")
-            title = unicode("Internet Radio")
-            draw.text((0, top), unicode(artist), font=font_art, fill=255)
-            draw.text((0, top+15), unicode(title), font=font_tit, fill=255)
+            artist = "no information"
+            title = "Internet Radio"
+            draw.text((0, top), artist, font=font_art, fill=255)
+            draw.text((0, top+15), title, font=font_tit, fill=255)
             draw.text((0, top+30), eltime, font=font_info, fill=255)
             draw.text((88, top+30), "Vol " + str(vol), font=font_info, fill=255)
             draw.text((0, top+45), song_info, font=font_info, fill=255)
 
-        disp.image(image)
-        disp.display()
+        oled.image(image)
+        oled.show()
         sleep(1)
-
 
 if __name__ == "__main__":
     import sys
