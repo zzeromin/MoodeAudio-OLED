@@ -1,0 +1,22 @@
+# systemd service about auto-start oled.service after booting
+# path and command: nano /lib/systemd/system/oled.service
+
+[Unit]
+Description=MoodeAudio OLED Service
+After=network.target
+
+
+[Service]
+ExecStartPre=/bin/sleep 3
+
+[Service]
+Type=idle
+ExecStart=/usr/bin/python3 MoodeAudio_OLED.py > /home/pi/service.log 2>&1
+WorkingDirectory=/home/pi/MoodeAudio-OLED
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=pi
+
+[Install]
+WantedBy=multi-user.target
