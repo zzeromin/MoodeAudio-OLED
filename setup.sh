@@ -25,8 +25,8 @@ echo "I2C, Python Tools Setup Complete."
 sleep 1
 python3 -m pip install --upgrade pip
 python3 -m pip install --upgrade Pillow
-pip3 install adafruit-circuitpython-ssd1306
-pip3 install python-mpd2
+python3 -m pip install adafruit-circuitpython-ssd1306
+python3 -m pip install python-mpd2
 echo "Python Library Setup Complete."
 sleep 1
 echo "downloading MoodeAudio-OLED source code."
