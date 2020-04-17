@@ -19,6 +19,7 @@ echo "dtparam=i2c_arm_baudrate=400000" >> /boot/config.txt
 echo "dtparam=i2c_dev=on" >> /boot/config.txt
 echo "i2c-bcm2708" >> /etc/modules
 echo "i2c-dev" >> /etc/modules
+apt-get update
 apt-get install python-dev python-smbus i2c-tools
 echo "I2C, Python Tools Setup Complete."
 sleep 1
