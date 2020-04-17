@@ -20,7 +20,7 @@ echo "dtparam=i2c_dev=on" >> /boot/config.txt
 echo "i2c-bcm2708" >> /etc/modules
 echo "i2c-dev" >> /etc/modules
 apt-get update
-apt-get install python-dev python-smbus i2c-tools
+apt-get install python3-dev python3-smbus i2c-tools
 echo "I2C, Python Tools Setup Complete."
 sleep 1
 python3 -m pip install --upgrade pip
