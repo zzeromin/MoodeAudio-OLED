@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -245,12 +245,13 @@ def main():
         cmd = "ip addr show wlan0 | grep 'inet ' | awk '{print $2}' | cut -d/ -f1"
         #get ip address of eth0 connection
         ipaddr = get_ip_address(cmd, cmdeth)
+        ip = str(ipaddr)
 
         if status is None:
             msg1 = "라즈뮤직파이"
             msg2 = "라즈겜동 텐타클 팀"
             msg3 = datetime.now().strftime( "%b %d %H:%M:%S" )
-            msg4 = "IP " + ipaddr
+            msg4 = "IP " + ip[2:-3]
             t1_size = draw.textsize(msg1, font=font_msg1)
             t2_size = draw.textsize(msg2, font=font_msg2)
             t3_size = draw.textsize(msg3, font=font_info)
@@ -314,7 +315,7 @@ def main():
                 draw.text((0, top+30), eltime, font=font_info, fill=255)
                 draw.text((88, top+30), "Vol " + str(vol), font=font_info, fill=255)
                 draw.text((0, top+45), song_info, font=font_info, fill=255)
-               
+
         else:
             artist = "no information"
             title = "Internet Radio"
