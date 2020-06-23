@@ -158,7 +158,10 @@ class MPDPoller(object):
             m, s = divmod(float(songplayed), 60)
             h, m = divmod(m, 60)
 
-            vol = stats['volume']
+            if 'volume' not in stats:
+                vol = ""
+            else:
+                vol = stats['volume']
 
         # Couldn't get the current song, so try reconnecting and retrying
         except (MPDError, IOError):
@@ -183,7 +186,7 @@ class MPDPoller(object):
 
         # Hurray!  We got the current song without any errors!
         eltime = "%d:%02d:%02d" % (h, m, s)
-        return({'artist': artist, 'title': title, 'eltime': eltime, 'volume': int(vol), 'song_info': song_info})
+        return({'artist': artist, 'title': title, 'eltime': eltime, 'volume': vol, 'song_info': song_info})
 
 def run_cmd(cmd):
     # runs whatever is in the cmd variable in the terminal
@@ -202,6 +205,9 @@ def get_ip_address(cmd, cmdeth):
     return ipaddr
 
 def main():
+
+    poller = MPDPoller()
+    poller.connect()
 
     # Clear display.
     oled.fill(0)
@@ -226,9 +232,7 @@ def main():
     top = padding
     bottom = height-padding
     x = padding
-    # Load default font.
-    poller = MPDPoller()
-    poller.connect()
+    # Load default font.    
     font_art = ImageFont.truetype('/home/pi/MoodeAudio-OLED/font/SourceHanSansK-Normal.otf', 12)
     font_tit = ImageFont.truetype('/home/pi/MoodeAudio-OLED/font/SourceHanSansK-Normal.otf', 12)
     font_info = ImageFont.truetype('/home/pi/MoodeAudio-OLED/font/NotoSansUI-Regular.ttf', 12)
@@ -237,6 +241,7 @@ def main():
 
     while True:
         draw.rectangle((0, 0, width, height), outline=0, fill=0)
+
         status = poller.poll()
 
         #get ip address of eth0 connection
@@ -269,15 +274,12 @@ def main():
         artist = status['artist']
         title = status['title']
         eltime = status['eltime']
-        vol = status['volume']
         song_info = status['song_info']
 
-        div_vol = vol // 10
-        vol_str = ""
-        for i in range(div_vol):
-            vol_str = vol_str + '+'
-        for i in range(10 - div_vol):
-            vol_str = vol_str + '-'
+        if 'volume' not in status:
+            vol = ""
+        else:
+            vol = status['volume']
 
         #print (titleLength, txtFind.isalpha())
         title = title
