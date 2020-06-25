@@ -62,6 +62,8 @@ DC = 23
 SPI_PORT = 0
 SPI_DEVICE = 0
 
+DSD_SAMPLE_RATE = {'dsd64', 'dsd128', 'dsd256'}
+
 class PollerError(Exception):
     """Fatal error in poller."""
 
@@ -132,7 +134,7 @@ class MPDPoller(object):
                 return(None)
 
             if 'artist' not in song:
-                artist = song['name']
+                artist = ""
             else:
                 artist = song['artist']
 
@@ -145,15 +147,26 @@ class MPDPoller(object):
 
             if 'audio' not in stats:
                 audio = ""
+
+            frequency = stats['audio'].split(':')[0]
+
+            if frequency in DSD_SAMPLE_RATE:
+                pass
             else:
-                frequency = stats['audio'].split(':')[0]
                 z, f = divmod(int(frequency), 1000)
-                if (f == 0): frequency = str(z) + " kHz"
-                else: frequency = str(float(frequency) / 1000) + "kHz"
-                song_info += stats['audio'].split(':')[1] + "bit " + frequency
+                if (f == 0):
+                    frequency = str(z) + " kHz"
+                else:
+                    frequency = str(float(frequency) / 1000) + "kHz"
+
+            song_info += stats['audio'].split(':')[1] + "bit " + frequency
 
             bitrate = stats['bitrate']
-            song_info += " " + stats['bitrate'] + "kbps"
+            if float(bitrate) > 1000:
+                song_info += " " + bitrate[0] + "." + bitrate[1] + "Mbps"
+            else:
+                song_info += " " + bitrate + "kbps"
+
             songplayed = stats['elapsed']
             m, s = divmod(float(songplayed), 60)
             h, m = divmod(m, 60)
@@ -232,7 +245,7 @@ def main():
     top = padding
     bottom = height-padding
     x = padding
-    # Load default font.    
+    # Load default font.
     font_art = ImageFont.truetype('/home/pi/MoodeAudio-OLED/font/SourceHanSansK-Normal.otf', 12)
     font_tit = ImageFont.truetype('/home/pi/MoodeAudio-OLED/font/SourceHanSansK-Normal.otf', 12)
     font_info = ImageFont.truetype('/home/pi/MoodeAudio-OLED/font/NotoSansUI-Regular.ttf', 12)
